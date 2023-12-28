@@ -1,0 +1,2 @@
+# SQL-Northwind_Traders_Database
+ Several queries that demonstrate how SQL can be used to extract and join different data sources. This project is based on a database from Northwind Traders, a company that imports and exports food globally. The database captures all the sales transactions that occurs between the company i.e. Northwind traders and its customers as well as the purchase transactions between Northwind and its suppliers.
