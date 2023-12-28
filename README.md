@@ -17,16 +17,16 @@ SELECT	re.firstname || ' ' || re.lastname AS manager_name,
 	COUNT(DISTINCT t.territoryid) AS territories,
 	COUNT(DISTINCT o.orderid) AS orders,
 	COUNT(DISTINCT o.customerid) AS customers
-FROM employees e
-JOIN employees re
+FROM employees AS e
+JOIN employees AS re
 	ON re.employeeid = e.reportsto
-JOIN employeeterritories et
+JOIN employeeterritories AS et
 	ON et.employeeid = e.employeeid
-JOIN territories t
+JOIN territories AS t
 	ON t.territoryid = et.territoryid
-JOIN region r
+JOIN region AS r
 	ON r.regionid = t.regionid
-JOIN orders o
+JOIN orders AS o
 	ON o.employeeid = e.employeeid
 GROUP BY 1
 LIMIT 2;
@@ -42,7 +42,7 @@ Steven Buchanan | 2 | 3 | 22 | **182** | 74
 For orders by German customers, list in chronoogical order their order IDs, order dates, order totals (quantity x unitprice with discount applied), running order total, and average order total. Sort by average order total in descending order.
 
 ```sql
-SELECT	abc.*,
+SELECT	orders_calculated.*,
 	SUM(order_total) OVER (ORDER BY orderdate, orderid) AS running_total,
 	AVG(order_total) OVER (ORDER BY orderdate, orderid) AS average_order_total
 
@@ -55,7 +55,7 @@ FROM	(SELECT	o.orderid,
 	JOIN customers AS c
 		USING(customerid)
 	WHERE c.country = 'Germany'
-	GROUP BY o.orderid, o.orderdate) AS abc
+	GROUP BY o.orderid, o.orderdate) AS orders_calculated
 
 ORDER BY average_order_total desc
 LIMIT 3;
@@ -77,7 +77,7 @@ SELECT	*,
 	num_order - (AVG(num_order) OVER ()) AS difference,
 	(CASE	WHEN num_order < 50 THEN 'Associates'
 		WHEN num_order <= 100 THEN 'Senior Associates'
-		ELSE 'Principals' END)
+		ELSE 'Principals' END) AS job_level
 
 FROM	(SELECT DISTINCT	e.employeeid,
 				CONCAT(e.firstname, ' ', e.lastname) AS fullname,
@@ -85,8 +85,16 @@ FROM	(SELECT DISTINCT	e.employeeid,
 				(COUNT(o.orderid) OVER (PARTITION BY e.employeeid))::NUMERIC / (COUNT(o.orderid) OVER ()) AS percentage_order
 	FROM employees AS e
 	LEFT JOIN orders AS o
-		USING (employeeid)) AS abc
+		USING (employeeid)) AS employee_aggregated
 
 ORDER BY num_order DESC
 LIMIT 5;
 ```
+
+employeeid | fullname | num_order | percentage_order | difference | job_level
+------------- | ------------- | ------------- | ------------- | ------------- | -------------
+4 | Margaret Peacock | 156 | 0.1880 | 63.78 | Principals
+3 | Janet Leverling | 127 | 0.1530 | 34.78 | Principals
+1 | Nancy Davolio | 123 | 0.1482 | 30.78 | Principals
+8 | Laura Callahan | 104 | 0.1253 | 11.78 | Principals
+2 | Andrew Fuller | 96 | 0.1157 | 3.78 | Senior Associates
